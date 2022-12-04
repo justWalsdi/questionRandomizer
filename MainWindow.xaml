@@ -1,0 +1,64 @@
+﻿<Window x:Class="QuestionRandomizer.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:QuestionRandomizer"
+        mc:Ignorable="d"
+        Title="Выдача билетов" Height="450" Width="800" Initialized="Window_Initialized" ResizeMode="NoResize">
+    <Grid>
+
+        <TabControl x:Name="TabMainControl">
+            <TabItem Header="Студенты">
+                <Grid x:Name="MainGrid" >
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="121*"/>
+                        <ColumnDefinition Width="11*"/>
+                        <ColumnDefinition Width="371*"/>
+                        <ColumnDefinition Width="94*"/>
+                        <ColumnDefinition Width="197*"/>
+                    </Grid.ColumnDefinitions>
+                    <DataGrid x:Name="StudentGrid" Background="#FFE5E5E5" AutoGenerateColumns="False" Grid.ColumnSpan="5" Margin="0,0,0,32" IsReadOnly="True" >
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header = "ID" Width="30"  CanUserResize="False" Binding="{Binding ID}"/>
+                            <DataGridTextColumn Header = "ФИО Студента" Width="Auto" CanUserResize="False" Binding="{Binding FullName}" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                </Grid>
+            </TabItem>
+            <TabItem Header="Банк вопросов">
+                <DataGrid x:Name="QuestionGrid" Background="#FFE5E5E5" AutoGenerateColumns="False" Grid.ColumnSpan="5" Margin="0,0,0,32" IsReadOnly="True">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header = "ID" Width="30" CanUserResize="False" Binding="{Binding ID}"/>
+                        <DataGridTextColumn Header = "Вопрос" Width="Auto" CanUserResize="False" Binding="{Binding QuestionText}"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </TabItem>
+        </TabControl>
+        <Button x:Name="StudentLoadButton" Content="Загрузка студентов" Width="120" Height="22" Click="StudentLoad"  HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,7,7">
+            <Button.Style>
+                <Style TargetType="Button">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding  ElementName=TabMainControl, Path=SelectedIndex}" Value="1">
+                            <Setter Property="Visibility" Value="Hidden" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Button.Style>
+        </Button>
+        <Button x:Name="QuestionLoadButton" Content="Загрузка вопросов" Width="120" Height="22" Click="QuestionLoad"  HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,7,7">
+            <Button.Style>
+                <Style TargetType="Button">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding  ElementName=TabMainControl, Path=SelectedIndex}" Value="0">
+                            <Setter Property="Visibility" Value="Hidden" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Button.Style>
+        </Button>
+        <Button x:Name="RandomCreator" Content="Выгрузка билетов" Width="120" Height="22" Click="CreateDoc"  HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,132,7" Visibility="Hidden">
+        </Button>
+    </Grid>
+</Window>
