@@ -35,12 +35,20 @@
                     </DataGrid.Columns>
                 </DataGrid>
             </TabItem>
+            <TabItem x:Name="AnswerCalcTab" Header="Выставление оценок" Visibility="Hidden">
+                <DataGrid x:Name="MarksGrid" Background="#FFE5E5E5" AutoGenerateColumns="False" Grid.ColumnSpan="5" Margin="0,0,0,32">
+                    
+                </DataGrid>
+            </TabItem>
         </TabControl>
         <Button x:Name="StudentLoadButton" Content="Загрузка студентов" Width="120" Height="22" Click="StudentLoad"  HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,7,7">
             <Button.Style>
                 <Style TargetType="Button">
                     <Style.Triggers>
                         <DataTrigger Binding="{Binding  ElementName=TabMainControl, Path=SelectedIndex}" Value="1">
+                            <Setter Property="Visibility" Value="Hidden" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding  ElementName=TabMainControl, Path=SelectedIndex}" Value="2">
                             <Setter Property="Visibility" Value="Hidden" />
                         </DataTrigger>
                     </Style.Triggers>
@@ -52,6 +60,23 @@
                 <Style TargetType="Button">
                     <Style.Triggers>
                         <DataTrigger Binding="{Binding  ElementName=TabMainControl, Path=SelectedIndex}" Value="0">
+                            <Setter Property="Visibility" Value="Hidden" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding  ElementName=TabMainControl, Path=SelectedIndex}" Value="2">
+                            <Setter Property="Visibility" Value="Hidden" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Button.Style>
+        </Button>
+        <Button x:Name="AnswerButton" Content="Поставить оценки" Width="120" Height="22" Click="CalculateMarks"  HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,7,7">
+            <Button.Style>
+                <Style TargetType="Button">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding  ElementName=TabMainControl, Path=SelectedIndex}" Value="0">
+                            <Setter Property="Visibility" Value="Hidden" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding  ElementName=TabMainControl, Path=SelectedIndex}" Value="1">
                             <Setter Property="Visibility" Value="Hidden" />
                         </DataTrigger>
                     </Style.Triggers>

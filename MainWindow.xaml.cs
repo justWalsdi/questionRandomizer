@@ -44,6 +44,10 @@ namespace QuestionRandomizer
             isStudentListLoaded = true;
             checkIfEverythingLoaded();
         }
+        private void CalculateMarks(object sender, RoutedEventArgs e)
+        {
+
+        }
         private void QuestionLoad(object sender, RoutedEventArgs e)
         {
             string? fileName = returnFileName();
@@ -84,11 +88,18 @@ namespace QuestionRandomizer
         {
             if (students.Count * 3 > questions.Count && isQuestionListLoaded)
             {
-                MessageBox.Show("Добавьте вопросы или загрузите другой список.", "Вопросов меньше чем студентов!");
                 RandomCreator.Visibility = Visibility.Hidden;
+                AnswerCalcTab.Visibility = Visibility.Hidden;
+                MessageBox.Show("Добавьте вопросы или загрузите другой список.", "Вопросов меньше чем студентов!");
             }
             else
-                if (isQuestionListLoaded && isStudentListLoaded) RandomCreator.Visibility = Visibility.Visible;
+            {
+                if (isQuestionListLoaded && isStudentListLoaded)
+                {
+                    RandomCreator.Visibility = Visibility.Visible;
+                    AnswerCalcTab.Visibility = Visibility.Visible;
+                }
+            }
         }   
         private void CreateDoc(object sender, RoutedEventArgs e)
         {

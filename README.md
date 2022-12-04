@@ -2,7 +2,7 @@
 
 ## Description
 
-Gives a user an option to input list of students and questions, after which it can be pushed into a `questions.docx` file with random questions per student.
+This programm creates `questions.docx` file after user provides student list and questions list. It can detect if there is not enough questions and will refuse to create `questoins.docx` file in this case.
 
 ## Requirements
 
