@@ -7,6 +7,7 @@ using System.Linq;
 using System.Diagnostics;
 using Xceed.Words.NET;
 using Xceed.Document.NET;
+using System.Windows.Controls;
 
 namespace QuestionRandomizer
 {
@@ -17,6 +18,7 @@ namespace QuestionRandomizer
     {
         List<StudentDataClass> students = new List<StudentDataClass>();
         List<Questions> questions = new List<Questions>();
+        Dictionary<StudentDataClass, List<Questions>> studentsDict = new Dictionary<StudentDataClass, List<Questions>>();
         bool isStudentListLoaded = false;
         bool isQuestionListLoaded = false;
         public MainWindow() => InitializeComponent();
@@ -37,10 +39,14 @@ namespace QuestionRandomizer
             students.Clear();
             foreach (string line in lines)
             {
-                sID++;
-                students.Add(new StudentDataClass() { ID = sID, FullName = line });
+                if (line != "")
+                {
+                    sID++;
+                    students.Add(new StudentDataClass() { ID = sID, FullName = line });
+                }
             }
             StudentGrid.ItemsSource = students;
+            StudentGrid.Items.Refresh();
             isStudentListLoaded = true;
             checkIfEverythingLoaded();
         }
@@ -56,13 +62,14 @@ namespace QuestionRandomizer
                 MessageBox.Show("Файл вопросов не найден.");
                 return;
             }
+            questions.Clear();
             string[] lines = File.ReadAllLines(fileName);
             int sID = 0;
-            questions.Clear();
             foreach(string line in lines)
             {
                 sID++;
-                questions.Add(new Questions() { ID = sID, QuestionText = line});
+                if (line != "")
+                    questions.Add(new Questions() { ID = sID, QuestionText = line});
             }
             QuestionGrid.ItemsSource = questions;
             QuestionGrid.Items.Refresh();
@@ -90,6 +97,7 @@ namespace QuestionRandomizer
             {
                 RandomCreator.Visibility = Visibility.Hidden;
                 AnswerCalcTab.Visibility = Visibility.Hidden;
+                studentsDict.Clear();
                 MessageBox.Show("Добавьте вопросы или загрузите другой список.", "Вопросов меньше чем студентов!");
             }
             else
@@ -98,14 +106,15 @@ namespace QuestionRandomizer
                 {
                     RandomCreator.Visibility = Visibility.Visible;
                     AnswerCalcTab.Visibility = Visibility.Visible;
+                    prepareDict();
                 }
             }
         }   
         private void CreateDoc(object sender, RoutedEventArgs e)
         {
             // Random questions for everyone
-            questions.Shuffle();
-
+            // questions.Shuffle();
+            // There will be data prepared
             string fileName = Environment.ExpandEnvironmentVariables("%USERPROFILE%\\Documents\\questions.docx");
 
             using (var doc = DocX.Create(fileName))
@@ -115,53 +124,64 @@ namespace QuestionRandomizer
                 Font defaultFont = new Font("Times New Roman");
                 /* Default Values For Text Insertions */
 
-                doc.InsertParagraph(mainTitle).Font(defaultFont).FontSize(16).SpacingAfter(18).Alignment = Alignment.center; 
+                doc.InsertParagraph(mainTitle).Font(defaultFont).FontSize(16).SpacingAfter(18).Alignment = Alignment.center;
                 int twoTicketsPerSheet = 0;
-                int questionPosition = 0;
                 foreach (StudentDataClass student in students)
                 {
                     doc.InsertParagraph($"Билет №{student.ID} ФИО {student.FullName}").Font(defaultFont).FontSize(14).SpacingAfter(6);
                     for (int i = 0; i < 3; i++)
                     {
                         doc.InsertParagraph($"Вопрос №{i + 1}\n").Font(defaultFont).FontSize(14).SpacingAfter(6).Alignment = Alignment.center;
-                        doc.InsertParagraph($"{questions[questionPosition].QuestionText}\n").Font(defaultFont).FontSize(12).SpacingAfter(6).Alignment = Alignment.center;
-                        questionPosition++;
+                        doc.InsertParagraph($"{studentsDict[student][i].QuestionText}\n").Font(defaultFont).FontSize(12).SpacingAfter(6).Alignment = Alignment.center;
                     }
                     // every two questions there is a section page break inserted
                     twoTicketsPerSheet++;
-                    if (twoTicketsPerSheet > 1) 
+                    if (twoTicketsPerSheet > 1)
                     {
                         twoTicketsPerSheet = 0;
                         doc.InsertSectionPageBreak();
                     }
                 }
+                string tempFileName;
                 try
                 {
-                    doc.Save();
-                } catch(Exception error)
+                    var saveFile = new SaveFileDialog();
+                    saveFile.DefaultExt = ".docx";
+                    saveFile.Filter = "Word documents (.docx)|*.docx";
+                    bool? result = saveFile.ShowDialog();
+                    if (result == true)
+                    {
+                        tempFileName = saveFile.FileName;
+                        doc.SaveAs(tempFileName);
+                    } else
+                    {
+                        MessageBox.Show("Место для сохранения не доступно.","Ошибка");
+                        return;
+                    }
+                }
+                catch (Exception)
                 {
-                    MessageBox.Show("Нет доступа к файлу, возможно он уже открыт?", "Ошибка");
+                    MessageBox.Show("Нет доступа к файлу. Возможно он уже открыт?", "Ошибка");
                     return;
                 }
-                MessageBox.Show($"Документ был создан здесь: {fileName}");
-                Process.Start("explorer.exe", "/select, \"" + fileName + "\"");
+                // while it is a good idea, can't be used because of time it takes to save a file.
+                // Process.Start("explorer.exe", "/select, \"" + tempFileName + "\"");
             }
+            
         }
-    }
-    static class ExtensionsClass
-    {
-        private static Random rng = new Random();
-
-        public static void Shuffle<T>(this IList<T> list)
+        private void prepareDict()
         {
-            int n = list.Count;
-            while (n > 1)
+            studentsDict.Clear();
+            int i = 0;
+            foreach (StudentDataClass student in students)
             {
-                n--;
-                int k = rng.Next(n + 1);
-                T value = list[k];
-                list[k] = list[n];
-                list[n] = value;
+                List<Questions> threeQuestions = new List<Questions>();
+                for (int j = 0; j < 3; j++)
+                {
+                    threeQuestions.Add(questions[i]);
+                    i++;
+                }
+                studentsDict.Add(student, threeQuestions);
             }
         }
     }
