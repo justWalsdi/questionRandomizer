@@ -13,6 +13,11 @@
   </ItemGroup>
 
   <ItemGroup>
+	<!-- 
+	  * DocX and ClosedXML have IO.Packaging dependency but with different versions of it.
+	  * IO.Packaging was added to make CXML and DocX work together. 
+	  * Warn was suppressed due to no noticed problems.
+	-->
 	<PackageReference Include="System.IO.Packaging" Version="4.7.0">
 	  <NoWarn>NU1608</NoWarn>
 	</PackageReference>

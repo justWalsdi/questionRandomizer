@@ -3,11 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Windows;
 using Microsoft.Win32;
-using System.Linq;
-using System.Diagnostics;
 using Xceed.Words.NET;
 using Xceed.Document.NET;
-using System.Windows.Controls;
 
 namespace QuestionRandomizer
 {
