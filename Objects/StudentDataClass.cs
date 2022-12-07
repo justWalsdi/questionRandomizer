@@ -10,11 +10,5 @@
         public int tasksCompleted { get; set; }
         public int questionsAnswered {get; set;}
         public int mark { get; set; }
-
-        //double finalMark =
-        //  (attendAtLectures/maxAttendAtLectures)*25 +
-        //  (attendAtPractice/maxAttendAtPractice)*25 +
-        //  (tasksCompleted/maxAttendAtPractice)*30 +
-        //  (questionsAnswered/maxQuestionsAnswered)*20
     }
 }
