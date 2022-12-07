@@ -9,25 +9,15 @@
     <Grid>
 
         <TabControl x:Name="TabMainControl">
-            <TabItem Header="Студенты">
-                <Grid x:Name="MainGrid" >
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="121*"/>
-                        <ColumnDefinition Width="11*"/>
-                        <ColumnDefinition Width="371*"/>
-                        <ColumnDefinition Width="94*"/>
-                        <ColumnDefinition Width="197*"/>
-                    </Grid.ColumnDefinitions>
-                    <DataGrid x:Name="StudentGrid" Background="#FFE5E5E5" AutoGenerateColumns="False" Grid.ColumnSpan="5" Margin="0,0,0,32" IsReadOnly="True" >
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header = "ID" Width="30"  CanUserResize="False" Binding="{Binding ID}"/>
-                            <DataGridTextColumn Header = "ФИО Студента" Width="Auto" CanUserResize="False" Binding="{Binding FullName}" />
-                        </DataGrid.Columns>
-                    </DataGrid>
-
-                </Grid>
+            <TabItem Header="Студенты" x:Name="StudentTab">
+                <DataGrid x:Name="StudentGrid" Background="#FFE5E5E5" AutoGenerateColumns="False" Grid.ColumnSpan="5" Margin="0,0,0,32" IsReadOnly="True" >
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header = "ID" Width="30"  CanUserResize="False" Binding="{Binding ID}"/>
+                        <DataGridTextColumn Header = "ФИО Студента" Width="Auto" CanUserResize="False" Binding="{Binding FullName}" />
+                    </DataGrid.Columns>
+                </DataGrid>
             </TabItem>
-            <TabItem Header="Банк вопросов">
+            <TabItem Header="Банк вопросов" x:Name="QuestionTab">
                 <DataGrid x:Name="QuestionGrid" Background="#FFE5E5E5" AutoGenerateColumns="False" Grid.ColumnSpan="5" Margin="0,0,0,32" IsReadOnly="True">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header = "ID" Width="30" CanUserResize="False" Binding="{Binding ID}"/>
@@ -35,10 +25,42 @@
                     </DataGrid.Columns>
                 </DataGrid>
             </TabItem>
-            <TabItem x:Name="AnswerCalcTab" Header="Выставление оценок" Visibility="Hidden">
-                <DataGrid x:Name="MarksGrid" Background="#FFE5E5E5" AutoGenerateColumns="False" Grid.ColumnSpan="5" Margin="0,0,0,32">
-                    
-                </DataGrid>
+            <TabItem x:Name="AnswersDataTab" Header="Выставление оценок" Visibility="Hidden" RequestBringIntoView="AnswersDataTab_RequestBringIntoView">
+                <TabControl x:Name="AnswersDataTabControl">
+                    <TabItem x:Name="InitialValuesTab" Header="Ввод изначальных данных" Visibility="Visible">
+                        <StackPanel>
+                            <Label x:Name="AttendanceLectureLabel" Content="Максимальная посещаемость лекционных занятий" FontSize="16"/>
+                            <Grid Width="130" Margin="6 0 0 0" HorizontalAlignment="Left">
+                                <TextBox x:Name="MaxLectureAttendTextbox" Width="30" HorizontalAlignment="Left" TextAlignment="Center" Text="0" FontSize="16" AutomationProperties.ItemType="int"/>
+                                <Button x:Name="MaxLectureAttendLoadButton" HorizontalAlignment="Right" Content="Установить" Width="80" Click="maxAttendanceLectureSetter"/>
+                            </Grid>
+                            <Label x:Name="AttendancePracticeLabel" Content="Максимальная посещаемость практических занятий" FontSize="16"/>
+                            <Grid Width="130" Margin="6 0 0 0" HorizontalAlignment="Left">
+                                <TextBox x:Name="MaxPracticeAttendTextbox" Width="30" HorizontalAlignment="Left" TextAlignment="Center" Text="0" FontSize="16"/>
+                                <Button x:Name="MaxPracticeAttendLoadButton" HorizontalAlignment="Right" Content="Установить" Width="80" Click="maxAttendancePracticeSetter"/>
+                            </Grid>
+                        </StackPanel>
+                    </TabItem>
+                    <TabItem x:Name="Answers" Header="Выставление итоговых оценок" IsEnabled="False">
+                        <DataGrid x:Name="MarksGrid" Background="#FFE5E5E5" AutoGenerateColumns="False" Grid.ColumnSpan="5" Margin="0,0,0,32">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header = "ФИО" Width="Auto" IsReadOnly="True" CanUserResize="False" Binding="{Binding FullName}"/>
+                                <DataGridTextColumn Header = "Присутсвие лекции" Width="Auto" CanUserResize="False" Binding="{Binding attendAtLectures, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                <DataGridTextColumn Header = "Присутствие практика" Width="Auto" CanUserResize="False" Binding="{Binding attendAtPractice, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                <DataGridTextColumn Header = "Сдано практик" Width="Auto" CanUserResize="False" Binding="{Binding tasksCompleted, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                <DataGridTextColumn Header = "Отвечено вопросов" Width="Auto" CanUserResize="False" Binding="{Binding questionsAnswered, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                <DataGridTextColumn x:Name="Mark"  Header = "Оценка" Width="Auto" CanUserResize="False" IsReadOnly="True" Binding="{Binding mark, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                <DataGridTemplateColumn Header="Подсчёт">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Name="btnView" Content="Подсчитать" Click="btnView_Click" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </TabItem>
+                </TabControl>
             </TabItem>
         </TabControl>
         <Button x:Name="StudentLoadButton" Content="Загрузка студентов" Width="120" Height="22" Click="StudentLoad"  HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,7,7">
@@ -73,10 +95,20 @@
             <Button.Style>
                 <Style TargetType="Button">
                     <Style.Triggers>
+                        <DataTrigger Binding="{Binding  ElementName=AnswersDataTabControl, Path=SelectedIndex}" Value="1">
+                            <Setter Property="Visibility" Value="Hidden" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding  ElementName=AnswersDataTabControl, Path=SelectedIndex}" Value="0">
+                            <Setter Property="Visibility" Value="Hidden" />
+                        </DataTrigger>
+                        <!-- Add event handlers for that instead of just showing button -->
                         <DataTrigger Binding="{Binding  ElementName=TabMainControl, Path=SelectedIndex}" Value="0">
                             <Setter Property="Visibility" Value="Hidden" />
                         </DataTrigger>
                         <DataTrigger Binding="{Binding  ElementName=TabMainControl, Path=SelectedIndex}" Value="1">
+                            <Setter Property="Visibility" Value="Hidden" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding  ElementName=TabMainControl, Path=SelectedIndex}" Value="2">
                             <Setter Property="Visibility" Value="Hidden" />
                         </DataTrigger>
                     </Style.Triggers>

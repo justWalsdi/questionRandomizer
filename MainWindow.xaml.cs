@@ -5,6 +5,8 @@ using System.Windows;
 using Microsoft.Win32;
 using Xceed.Words.NET;
 using Xceed.Document.NET;
+using System.Data;
+
 
 namespace QuestionRandomizer
 {
@@ -13,11 +15,93 @@ namespace QuestionRandomizer
     /// </summary>
     public partial class MainWindow : Window
     {
+        // Create ticket data
         List<StudentDataClass> students = new List<StudentDataClass>();
         List<Questions> questions = new List<Questions>();
         Dictionary<StudentDataClass, List<Questions>> studentsDict = new Dictionary<StudentDataClass, List<Questions>>();
         bool isStudentListLoaded = false;
         bool isQuestionListLoaded = false;
+        // Create ticket data
+
+        // Calculate marks data
+        int maxAttendanceLecture = 0;
+        int maxAttendancePractice = 0;
+        bool isMaxAttendanceLectureSet = false;
+        bool isMaxAttendancePracticeSet = false;
+        private void isAnswersTabOpened()
+        {
+            if (isMaxAttendanceLectureSet && isMaxAttendancePracticeSet)
+            {
+                Answers.IsEnabled = true;
+                MarksGrid.ItemsSource = students;
+                MarksGrid.Items.Refresh();
+                return;
+            }
+            Answers.IsEnabled = false;   
+        }
+        // Calculate marks data
+        private void maxAttendanceLectureSetter(object sender, RoutedEventArgs e)
+        {
+            isMaxAttendanceLectureSet = false;
+            isAnswersTabOpened();
+            if (MaxLectureAttendTextbox.Text == null)
+                return;
+            if (Int32.TryParse(MaxLectureAttendTextbox.Text, out int numValue))
+            {
+                if (numValue < 0)
+                {
+                    MaxLectureAttendTextbox.Text = "0";
+                    MessageBox.Show("Число не может быть меньше нуля!", "Ошибка!");
+                    return;
+                }
+                if (numValue > 100)
+                {
+                    MessageBox.Show("Занятий не может быть больше, чем рабочих дней!");
+                    return;
+                }
+                maxAttendanceLecture = numValue;
+                isMaxAttendanceLectureSet = true;
+                isAnswersTabOpened();
+                MessageBox.Show("Количество лекционных занятий установлено!");
+            } else
+            {
+                MaxLectureAttendTextbox.Text = "0";
+                MessageBox.Show("Попробуйте ввести число", "Ошибка!");
+            }
+        }
+        private void maxAttendancePracticeSetter(object sender, RoutedEventArgs e)
+        {
+            isMaxAttendancePracticeSet = false;
+            isAnswersTabOpened();
+            if (MaxPracticeAttendTextbox.Text == null)
+                return;
+            if (Int32.TryParse(MaxPracticeAttendTextbox.Text, out int numValue))
+            {
+                if (numValue < 0)
+                {
+                    MaxPracticeAttendTextbox.Text = "0";
+                    MessageBox.Show("Число не может быть меньше нуля!", "Ошибка!");
+                    return;
+                }
+                if (numValue > 100)
+                {
+                    MaxPracticeAttendTextbox.Text = "0";
+                    MessageBox.Show("Занятий не может быть больше, чем рабочих дней!");
+                    return;
+                }
+                maxAttendancePractice = numValue;
+                isMaxAttendancePracticeSet = true;
+                isAnswersTabOpened();
+                MessageBox.Show("Количество практических занятий установлено!");
+            }
+            else
+            {
+                MaxPracticeAttendTextbox.Text = "0";
+                MessageBox.Show("Попробуйте ввести число", "Ошибка!");
+            }
+        }
+
+
         public MainWindow() => InitializeComponent();
         private void Window_Initialized(object sender, EventArgs e)
         {
@@ -39,7 +123,11 @@ namespace QuestionRandomizer
                 if (line != "")
                 {
                     sID++;
-                    students.Add(new StudentDataClass() { ID = sID, FullName = line });
+                    students.Add(new StudentDataClass() { 
+                        ID = sID, FullName = line, Coefficient = 1.0,
+                        attendAtLectures = 0, attendAtPractice = 0,
+                        tasksCompleted = 0, questionsAnswered = 0
+                    });
                 }
             }
             StudentGrid.ItemsSource = students;
@@ -62,11 +150,11 @@ namespace QuestionRandomizer
             questions.Clear();
             string[] lines = File.ReadAllLines(fileName);
             int sID = 0;
-            foreach(string line in lines)
+            foreach (string line in lines)
             {
                 sID++;
                 if (line != "")
-                    questions.Add(new Questions() { ID = sID, QuestionText = line});
+                    questions.Add(new Questions() { ID = sID, QuestionText = line });
             }
             QuestionGrid.ItemsSource = questions;
             QuestionGrid.Items.Refresh();
@@ -93,7 +181,7 @@ namespace QuestionRandomizer
             if (students.Count * 3 > questions.Count && isQuestionListLoaded)
             {
                 RandomCreator.Visibility = Visibility.Hidden;
-                AnswerCalcTab.Visibility = Visibility.Hidden;
+                AnswersDataTab.Visibility = Visibility.Hidden;
                 studentsDict.Clear();
                 MessageBox.Show("Добавьте вопросы или загрузите другой список.", "Вопросов меньше чем студентов!");
             }
@@ -102,11 +190,11 @@ namespace QuestionRandomizer
                 if (isQuestionListLoaded && isStudentListLoaded)
                 {
                     RandomCreator.Visibility = Visibility.Visible;
-                    AnswerCalcTab.Visibility = Visibility.Visible;
+                    AnswersDataTab.Visibility = Visibility.Visible;
                     prepareDict();
                 }
             }
-        }   
+        }
         private void CreateDoc(object sender, RoutedEventArgs e)
         {
             // Random questions for everyone
@@ -152,7 +240,7 @@ namespace QuestionRandomizer
                         doc.SaveAs(tempFileName);
                     } else
                     {
-                        MessageBox.Show("Место для сохранения не доступно.","Ошибка");
+                        MessageBox.Show("Место для сохранения не доступно.", "Ошибка");
                         return;
                     }
                 }
@@ -164,7 +252,7 @@ namespace QuestionRandomizer
                 // while it is a good idea, can't be used because of time it takes to save a file.
                 // Process.Start("explorer.exe", "/select, \"" + tempFileName + "\"");
             }
-            
+
         }
         private void prepareDict()
         {
@@ -180,6 +268,112 @@ namespace QuestionRandomizer
                 }
                 studentsDict.Add(student, threeQuestions);
             }
+        }
+        private void AnswersDataTab_RequestBringIntoView(object sender, RequestBringIntoViewEventArgs e)
+        {
+            StudentTab.IsEnabled = false;
+            QuestionTab.IsEnabled = false;
+            SpecialStudentsCorrection();
+        }
+        private void SpecialStudentsCorrection()
+        {
+            if (students == null)
+                return;
+
+            for (int i = 0; i < students.Count; i++)
+            {
+                foreach(var sStudent in specialStudents)
+                {
+                    if (students[i].FullName != null)
+                        if (students[i].FullName.Contains(sStudent.Key))
+                            students[i].Coefficient = sStudent.Value;
+                }
+            }
+        }
+
+        Dictionary<string, double> specialStudents = new Dictionary<string, double>()
+        {
+            { "Ношин", 1.4 },
+            { "Павлов", 1.4 },
+            { "Белоусов", 1.4 }
+        };
+
+        private void btnView_Click(object sender, RoutedEventArgs e)
+        {
+            StudentDataClass student = (StudentDataClass)((System.Windows.Controls.Button)e.Source).DataContext;
+            if (
+                student.attendAtLectures == 0 &&
+                student.attendAtPractice == 0 &&
+                student.tasksCompleted == 0 &&
+                student.questionsAnswered == 0
+            ) 
+            {
+                MessageBox.Show("Некорректные данные, либо студент не допускается до экзамена по умолчанию!");
+                return;
+            }
+            for (int i = 0; i < students.Count; i++)
+            {
+                if (students[i].FullName != student.FullName)
+                    continue;
+
+                int tempMark = roundedMark(
+                    student.Coefficient,
+                    student.attendAtLectures,
+                    student.attendAtPractice,
+                    student.tasksCompleted,
+                    student.questionsAnswered
+                );
+                students[i].mark = tempMark;
+                MarksGrid.IsReadOnly = true;
+                MarksGrid.Items.Refresh();
+                MarksGrid.IsReadOnly = false;
+            }
+        }
+        private int roundedMark(double Coefficient, int attendAtLectures, int attendAtPractice, int tasksCompleted, int questionsAnswered)
+        {
+            double grossMark = calculateMark(
+                    Coefficient,
+                    attendAtLectures,
+                    attendAtPractice,
+                    tasksCompleted,
+                    questionsAnswered);
+            if ( grossMark > 100 )
+            {
+                return 100;
+            }
+            return ((int)Math.Ceiling(grossMark));
+            
+        }
+        private double calculateMark(double Coefficient, int attendAtLectures, int attendAtPractice, int tasksCompleted, int questionsAnswered)
+        {
+            if (
+                attendAtLectures <= maxAttendanceLecture &&
+                attendAtPractice <=maxAttendancePractice &&
+                tasksCompleted <= maxAttendancePractice && 
+                questionsAnswered <= 3
+                )
+            {
+                if (attendAtLectures < 0 ||
+                    attendAtPractice < 0 ||
+                    tasksCompleted < 0 ||
+                    questionsAnswered < 0
+                    )
+                {
+                    MessageBox.Show("Введенные данные не совпадают. Оценка не была посчитана.", "Ошибка!");
+                    return 0.0;
+                } else
+                {
+                    return (
+                        (Convert.ToDouble(attendAtLectures) / Convert.ToDouble(maxAttendanceLecture) * 25.0 +
+                        Convert.ToDouble(attendAtPractice) / Convert.ToDouble(maxAttendancePractice) * 25.0 +
+                        Convert.ToDouble(tasksCompleted) / Convert.ToDouble(maxAttendancePractice) * 30.0 +
+                        Convert.ToDouble(questionsAnswered) / 3.0 * 20.0)
+                        * Convert.ToDouble(Coefficient)
+                    );
+                }
+            }
+            MessageBox.Show("Введенные данные не совпадают. Оценка не была посчитана.", "Ошибка!");
+            return 0.0;
         }
     }
 }
