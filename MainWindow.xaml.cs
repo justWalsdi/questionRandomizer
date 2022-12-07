@@ -112,8 +112,8 @@ namespace QuestionRandomizer
             // Random questions for everyone
             // questions.Shuffle();
             // There will be data prepared
-            string fileName = Environment.ExpandEnvironmentVariables("%USERPROFILE%\\Documents\\questions.docx");
-
+            string fileName = Environment.ExpandEnvironmentVariables("%TEMP%\\questions.docx");
+            DocX.Create(fileName);
             using (var doc = DocX.Create(fileName))
             {
                 /* Default Values For Text Insertions */
