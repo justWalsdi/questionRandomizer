@@ -200,9 +200,30 @@ namespace QuestionRandomizer
             // Random questions for everyone
             // questions.Shuffle();
             // There will be data prepared
-            string fileName = Environment.ExpandEnvironmentVariables("%TEMP%\\questions.docx");
-            DocX.Create(fileName);
-            using (var doc = DocX.Create(fileName))
+            string FileName;
+            try
+            {
+                var saveFile = new SaveFileDialog();
+                saveFile.DefaultExt = ".docx";
+                saveFile.Filter = "Word documents (.docx)|*.docx";
+                bool? result = saveFile.ShowDialog();
+                if (result == true)
+                {
+                    FileName = saveFile.FileName;
+                }
+                else
+                {
+                    MessageBox.Show("Место для сохранения не доступно.", "Ошибка");
+                    return;
+                }
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("Нет доступа к файлу. Возможно он уже открыт?", "Ошибка");
+                return;
+            }
+            DocX.Create(FileName);
+            using (var doc = DocX.Create(FileName))
             {
                 /* Default Values For Text Insertions */
                 const string mainTitle = "Билеты по дисциплине \"Стандартизация, сертификация и управление качеством программного обеспечения\".";
@@ -227,32 +248,19 @@ namespace QuestionRandomizer
                         doc.InsertSectionPageBreak();
                     }
                 }
-                string tempFileName;
                 try
                 {
-                    var saveFile = new SaveFileDialog();
-                    saveFile.DefaultExt = ".docx";
-                    saveFile.Filter = "Word documents (.docx)|*.docx";
-                    bool? result = saveFile.ShowDialog();
-                    if (result == true)
-                    {
-                        tempFileName = saveFile.FileName;
-                        doc.SaveAs(tempFileName);
-                    } else
-                    {
-                        MessageBox.Show("Место для сохранения не доступно.", "Ошибка");
-                        return;
-                    }
-                }
-                catch (Exception)
+                    doc.Save();
+                    MessageBox.Show($"Файл сохранён по пути {FileName}!");
+                } catch(Exception)
                 {
                     MessageBox.Show("Нет доступа к файлу. Возможно он уже открыт?", "Ошибка");
                     return;
                 }
+
                 // while it is a good idea, can't be used because of time it takes to save a file.
                 // Process.Start("explorer.exe", "/select, \"" + tempFileName + "\"");
             }
-
         }
         private void prepareDict()
         {
@@ -293,9 +301,9 @@ namespace QuestionRandomizer
 
         Dictionary<string, double> specialStudents = new Dictionary<string, double>()
         {
-            { "Ношин", 1.4 },
-            { "Павлов", 1.4 },
-            { "Белоусов", 1.4 }
+            { "Ношин ", 1.4 },
+            { "Павлов ", 1.4 },
+            { "Белоусов ", 1.4 }
         };
 
         private void btnView_Click(object sender, RoutedEventArgs e)
@@ -377,3 +385,6 @@ namespace QuestionRandomizer
         }
     }
 }
+// TODO: Добавить рандомизацию вопросов
+// TODO: Заставить некоторые вопросы отдавать определённым студентам
+// TODO: Вывод всех оценок в DocX?
