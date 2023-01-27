@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Windows;
 using Microsoft.Win32;
-using Xceed.Words.NET;
-using Xceed.Document.NET;
-using System.Data;
-
+//using Xceed.Words.NET;
+//using Xceed.Document.NET;
+//using System.Data;
+//using Utils.FileTools.cs
 
 namespace QuestionRandomizer
 {
@@ -109,7 +109,7 @@ namespace QuestionRandomizer
         }
         private void StudentLoad(object sender, RoutedEventArgs e)
         {
-            string? fileName = returnFileName();
+            string? fileName = FileTools.returnFileName();
             if (fileName == null)
             {
                 MessageBox.Show("Файл не найден.");
@@ -133,15 +133,16 @@ namespace QuestionRandomizer
             StudentGrid.ItemsSource = students;
             StudentGrid.Items.Refresh();
             isStudentListLoaded = true;
-            checkIfEverythingLoaded();
+            CheckIfEverythingLoaded();
         }
         private void CalculateMarks(object sender, RoutedEventArgs e)
         {
-
+            FileTools.CreateExcelFile(students);
         }
         private void QuestionLoad(object sender, RoutedEventArgs e)
         {
-            string? fileName = returnFileName();
+            string? fileName = FileTools.returnFileName();
+
             if (fileName == null)
             {
                 MessageBox.Show("Файл вопросов не найден.");
@@ -159,123 +160,35 @@ namespace QuestionRandomizer
             QuestionGrid.ItemsSource = questions;
             QuestionGrid.Items.Refresh();
             isQuestionListLoaded = true;
-            checkIfEverythingLoaded();
+            CheckIfEverythingLoaded();
         }
-        private string? returnFileName()
+        private void CheckIfEverythingLoaded()
         {
-            var openFile = new OpenFileDialog();
-            openFile.DefaultExt = ".txt";
-            openFile.Filter = "Text documents (.txt)|*.txt";
-
-            bool? result = openFile.ShowDialog();
-            if (result == true)
-            {
-                return openFile.FileName;
-            } else
-            {
-                return null;
-            }
-        }
-        private void checkIfEverythingLoaded()
-        {
-            if (students.Count * 3 > questions.Count && isQuestionListLoaded)
+            if (questions.Count <= 3 && isQuestionListLoaded)
             {
                 RandomCreator.Visibility = Visibility.Hidden;
                 AnswersDataTab.Visibility = Visibility.Hidden;
-                studentsDict.Clear();
                 MessageBox.Show("Добавьте вопросы или загрузите другой список.", "Вопросов меньше чем студентов!");
+                return;
             }
-            else
+
+            if (students.Count < 1 && isStudentListLoaded)
             {
-                if (isQuestionListLoaded && isStudentListLoaded)
-                {
-                    RandomCreator.Visibility = Visibility.Visible;
-                    AnswersDataTab.Visibility = Visibility.Visible;
-                    prepareDict();
-                }
+                RandomCreator.Visibility = Visibility.Hidden;
+                AnswersDataTab.Visibility = Visibility.Hidden;
+                MessageBox.Show("Добавьте хотя бы одного студента!", "Ошибка!");
+                return;
+            }
+
+            if (isQuestionListLoaded && isStudentListLoaded)
+            {
+                RandomCreator.Visibility = Visibility.Visible;
+                AnswersDataTab.Visibility = Visibility.Visible;
             }
         }
         private void CreateDoc(object sender, RoutedEventArgs e)
         {
-            // Random questions for everyone
-            // questions.Shuffle();
-            // There will be data prepared
-            string FileName;
-            try
-            {
-                var saveFile = new SaveFileDialog();
-                saveFile.DefaultExt = ".docx";
-                saveFile.Filter = "Word documents (.docx)|*.docx";
-                bool? result = saveFile.ShowDialog();
-                if (result == true)
-                {
-                    FileName = saveFile.FileName;
-                }
-                else
-                {
-                    MessageBox.Show("Место для сохранения не доступно.", "Ошибка");
-                    return;
-                }
-            }
-            catch (Exception)
-            {
-                MessageBox.Show("Нет доступа к файлу. Возможно он уже открыт?", "Ошибка");
-                return;
-            }
-            DocX.Create(FileName);
-            using (var doc = DocX.Create(FileName))
-            {
-                /* Default Values For Text Insertions */
-                const string mainTitle = "Билеты по дисциплине \"Стандартизация, сертификация и управление качеством программного обеспечения\".";
-                Font defaultFont = new Font("Times New Roman");
-                /* Default Values For Text Insertions */
-
-                doc.InsertParagraph(mainTitle).Font(defaultFont).FontSize(16).SpacingAfter(18).Alignment = Alignment.center;
-                int twoTicketsPerSheet = 0;
-                foreach (StudentDataClass student in students)
-                {
-                    doc.InsertParagraph($"Билет №{student.ID} ФИО {student.FullName}").Font(defaultFont).FontSize(14).SpacingAfter(6);
-                    for (int i = 0; i < 3; i++)
-                    {
-                        doc.InsertParagraph($"Вопрос №{i + 1}\n").Font(defaultFont).FontSize(14).SpacingAfter(6).Alignment = Alignment.center;
-                        doc.InsertParagraph($"{studentsDict[student][i].QuestionText}\n").Font(defaultFont).FontSize(12).SpacingAfter(6).Alignment = Alignment.center;
-                    }
-                    // every two questions there is a section page break inserted
-                    twoTicketsPerSheet++;
-                    if (twoTicketsPerSheet > 1)
-                    {
-                        twoTicketsPerSheet = 0;
-                        doc.InsertSectionPageBreak();
-                    }
-                }
-                try
-                {
-                    doc.Save();
-                    MessageBox.Show($"Файл сохранён по пути {FileName}!");
-                } catch(Exception)
-                {
-                    MessageBox.Show("Нет доступа к файлу. Возможно он уже открыт?", "Ошибка");
-                    return;
-                }
-
-                // while it is a good idea, can't be used because of time it takes to save a file.
-                // Process.Start("explorer.exe", "/select, \"" + tempFileName + "\"");
-            }
-        }
-        private void prepareDict()
-        {
-            studentsDict.Clear();
-            int i = 0;
-            foreach (StudentDataClass student in students)
-            {
-                List<Questions> threeQuestions = new List<Questions>();
-                for (int j = 0; j < 3; j++)
-                {
-                    threeQuestions.Add(questions[i]);
-                    i++;
-                }
-                studentsDict.Add(student, threeQuestions);
-            }
+            FileTools.CreateDocx(questions, students);
         }
         private void AnswersDataTab_RequestBringIntoView(object sender, RequestBringIntoViewEventArgs e)
         {
@@ -294,50 +207,102 @@ namespace QuestionRandomizer
                 {
                     if (students[i].FullName != null)
                         if (students[i].FullName.Contains(sStudent.Key))
+                        {
                             students[i].Coefficient = sStudent.Value;
+                        }
                 }
             }
         }
 
-        Dictionary<string, double> specialStudents = new Dictionary<string, double>()
+        public Dictionary<string, double> specialStudents = new()
         {
             { "Ношин ", 1.4 },
             { "Павлов ", 1.4 },
-            { "Белоусов ", 1.4 }
+            { "Сигаев ", 1.4 }
         };
 
-        private void btnView_Click(object sender, RoutedEventArgs e)
+        private void BtnView_Click(object sender, RoutedEventArgs e)
         {
-            StudentDataClass student = (StudentDataClass)((System.Windows.Controls.Button)e.Source).DataContext;
-            if (
-                student.attendAtLectures == 0 &&
-                student.attendAtPractice == 0 &&
-                student.tasksCompleted == 0 &&
-                student.questionsAnswered == 0
-            ) 
+            StudentDataClass student;
+            try
             {
-                MessageBox.Show("Некорректные данные, либо студент не допускается до экзамена по умолчанию!");
+                student = (StudentDataClass)((System.Windows.Controls.Button)e.Source).DataContext;
+            }
+            catch (Exception E)
+            {
                 return;
             }
-            for (int i = 0; i < students.Count; i++)
+            //if (
+            //    (student.attendAtLectures == 0 &&
+            //    student.attendAtPractice == 0 &&
+            //    student.tasksCompleted == 0 &&
+            //    student.questionsAnswered == 0) ||
+            //    student.attendAtLectures > maxAttendanceLecture || 
+            //    student.attendAtPractice > maxAttendancePractice || 
+            //    student.tasksCompleted > maxAttendancePractice || 
+            //    student.questionsAnswered > maxAttendancePractice
+            //) 
+            //{
+            //    MessageBox.Show(
+            //        $"Либо данные не введены либо завышены от изначальных значений.\n" +
+            //        $"Максимальная посещаемость по лекциям: {maxAttendanceLecture}\n" +
+            //        $"Максимальная посещаемость по практикам: {maxAttendancePractice}"
+            //    );
+            //    return;
+            //}
+            if (student.attendAtLectures > maxAttendanceLecture ||
+            student.attendAtPractice > maxAttendancePractice ||
+            student.tasksCompleted > maxAttendancePractice ||
+            student.questionsAnswered > maxAttendancePractice
+            ) 
             {
-                if (students[i].FullName != student.FullName)
-                    continue;
+                MessageBox.Show(
+                    $"Либо данные не введены либо завышены от изначальных значений.\n" +
+                    $"Максимальная посещаемость по лекциям: {maxAttendanceLecture}\n" +
+                    $"Максимальная посещаемость по практикам: {maxAttendancePractice}"
+                );
+                return;
+            }
 
-                int tempMark = roundedMark(
+            int studentIndex = students.IndexOf(student);
+            if (student.isIgnoreActive)
+            {
+                students[studentIndex].mark = 92;
+            } else
+            {
+                students[studentIndex].mark = RoundedMark(
                     student.Coefficient,
                     student.attendAtLectures,
                     student.attendAtPractice,
                     student.tasksCompleted,
                     student.questionsAnswered
                 );
-                students[i].mark = tempMark;
-                MarksGrid.IsReadOnly = true;
-                MarksGrid.Items.Refresh();
-                MarksGrid.IsReadOnly = false;
             }
+            students[studentIndex].isMarkSet = true;
+            MarksGrid.IsReadOnly = true;
+            MarksGrid.Items.Refresh();
+            MarksGrid.IsReadOnly = false;
+            //for (int i = 0; i < students.Count; i++)
+            //{
+            //    if (students[i].FullName != student.FullName)
+            //        continue;
+
+
+            //    int tempMark = roundedMark(
+            //        student.Coefficient,
+            //        student.attendAtLectures,
+            //        student.attendAtPractice,
+            //        student.tasksCompleted,
+            //        student.questionsAnswered
+            //    );
+            //    students[i].mark = tempMark;
+            //    students[i].isMarkSet = true;
+            //    MarksGrid.IsReadOnly = true;
+            //    MarksGrid.Items.Refresh();
+            //    MarksGrid.IsReadOnly = false;
+            //}
         }
-        private int roundedMark(double Coefficient, int attendAtLectures, int attendAtPractice, int tasksCompleted, int questionsAnswered)
+        private int RoundedMark(double Coefficient, int attendAtLectures, int attendAtPractice, int tasksCompleted, int questionsAnswered)
         {
             double grossMark = calculateMark(
                     Coefficient,
@@ -382,6 +347,22 @@ namespace QuestionRandomizer
             }
             MessageBox.Show("Введенные данные не совпадают. Оценка не была посчитана.", "Ошибка!");
             return 0.0;
+        }
+
+        private void MarksGrid_CellEditEnding(object sender, System.Windows.Controls.DataGridCellEditEndingEventArgs e)
+        {
+            if (((StudentDataClass)e.Row.Item).isCoefActive)
+            {
+                ((StudentDataClass)e.Row.Item).Coefficient = 1.4;
+            } else
+            {
+                ((StudentDataClass)e.Row.Item).Coefficient = 1.0;
+            }
+        }
+
+        private void PrintMarks(object sender, RoutedEventArgs e)
+        {
+            FileTools.CreateExcelFile(students);
         }
     }
 }

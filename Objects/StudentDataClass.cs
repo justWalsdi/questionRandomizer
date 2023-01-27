@@ -10,5 +10,8 @@
         public int tasksCompleted { get; set; }
         public int questionsAnswered {get; set;}
         public int mark { get; set; }
+        public bool isCoefActive { get; set; } = false;
+        public bool isIgnoreActive { get; set; } = false;
+        public bool isMarkSet { get; set; } = false;
     }
 }

@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:QuestionRandomizer"
         mc:Ignorable="d"
-        Title="Выдача билетов" Height="450" Width="800" Initialized="Window_Initialized" ResizeMode="NoResize">
+        Title="Выдача билетов" Height="450" Width="960" Initialized="Window_Initialized" ResizeMode="CanResize" MinWidth="800" MinHeight="450">
     <Grid>
 
         <TabControl x:Name="TabMainControl">
@@ -42,9 +42,11 @@
                         </StackPanel>
                     </TabItem>
                     <TabItem x:Name="Answers" Header="Выставление итоговых оценок" IsEnabled="False">
-                        <DataGrid x:Name="MarksGrid" Background="#FFE5E5E5" AutoGenerateColumns="False" Grid.ColumnSpan="5" Margin="0,0,0,32">
+                        <DataGrid x:Name="MarksGrid" Background="#FFE5E5E5" AutoGenerateColumns="False" Grid.ColumnSpan="5" Margin="0,0,0,32" CellEditEnding="MarksGrid_CellEditEnding">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header = "ФИО" Width="Auto" IsReadOnly="True" CanUserResize="False" Binding="{Binding FullName}"/>
+                                <DataGridCheckBoxColumn Header="Пов. Коэф." Width="Auto" CanUserResize="False" Binding="{Binding isCoefActive, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                <DataGridCheckBoxColumn Header="Крас. Диплом" Width="Auto" CanUserResize="False" Binding="{Binding isIgnoreActive, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                 <DataGridTextColumn Header = "Присутсвие лекции" Width="Auto" CanUserResize="False" Binding="{Binding attendAtLectures, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                 <DataGridTextColumn Header = "Присутствие практика" Width="Auto" CanUserResize="False" Binding="{Binding attendAtPractice, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                 <DataGridTextColumn Header = "Сдано практик" Width="Auto" CanUserResize="False" Binding="{Binding tasksCompleted, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
@@ -53,7 +55,7 @@
                                 <DataGridTemplateColumn Header="Подсчёт">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Button Name="btnView" Content="Подсчитать" Click="btnView_Click" />
+                                            <Button Name="btnView" Content="Подсчитать" Click="BtnView_Click" />
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
@@ -91,16 +93,17 @@
                 </Style>
             </Button.Style>
         </Button>
-        <Button x:Name="AnswerButton" Content="Поставить оценки" Width="120" Height="22" Click="CalculateMarks"  HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,7,7">
+        <Button x:Name="AnswerButton" Content="Выгрузить оценки" Width="120" Height="22" Click="CalculateMarks"  HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,7,7">
             <Button.Style>
                 <Style TargetType="Button">
                     <Style.Triggers>
-                        <DataTrigger Binding="{Binding  ElementName=AnswersDataTabControl, Path=SelectedIndex}" Value="1">
-                            <Setter Property="Visibility" Value="Hidden" />
-                        </DataTrigger>
                         <DataTrigger Binding="{Binding  ElementName=AnswersDataTabControl, Path=SelectedIndex}" Value="0">
                             <Setter Property="Visibility" Value="Hidden" />
                         </DataTrigger>
+                        <DataTrigger Binding="{Binding  ElementName=AnswersDataTabControl, Path=SelectedIndex}" Value="1">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                        
                         <!-- Add event handlers for that instead of just showing button -->
                         <DataTrigger Binding="{Binding  ElementName=TabMainControl, Path=SelectedIndex}" Value="0">
                             <Setter Property="Visibility" Value="Hidden" />
@@ -108,9 +111,9 @@
                         <DataTrigger Binding="{Binding  ElementName=TabMainControl, Path=SelectedIndex}" Value="1">
                             <Setter Property="Visibility" Value="Hidden" />
                         </DataTrigger>
-                        <DataTrigger Binding="{Binding  ElementName=TabMainControl, Path=SelectedIndex}" Value="2">
+                        <!--<DataTrigger Binding="{Binding  ElementName=TabMainControl, Path=SelectedIndex}" Value="2">
                             <Setter Property="Visibility" Value="Hidden" />
-                        </DataTrigger>
+                        </DataTrigger>-->
                     </Style.Triggers>
                 </Style>
             </Button.Style>
